@@ -130,6 +130,8 @@ header:
     shortcuts: Phím tắt
     specific_apps: Ứng dụng cụ thể
     virtual_desk: Máy tính để bàn ảo
+home:
+  new_resources: Tài nguyên mới
 inherit: Kế thừa
 inProgress: Trong tiến trình...
 insert: Chèn
@@ -147,6 +149,7 @@ quit: Từ bỏ
 remove: Di dời
 save: Cứu
 save_and_restart: Lưu & Khởi động lại
+see_more: Xem thêm
 shortcuts:
   enable: Bật các phím tắt tích hợp (AHK)
   enable_tooltip: Tắt nếu bạn sẽ triển khai các phím tắt của riêng mình bằng API SEELEN Core
@@ -231,6 +234,10 @@ toolbar:
   delay_to_hide: Trì hoãn việc ẩn giấu
   delay_to_show: Trì hoãn hiển thị
   dock_side: Chức vụ
+  dynamic_color: Màu sắc động
+  dynamic_color_tooltip: >-
+    Kích hoạt nền động và màu nền dựa trên cửa sổ tập trung. (Màu sắc có thể bị
+    ghi đè bởi các chủ đề)
   enable: Kích hoạt thanh công cụ ưa thích
   height: Chiều cao
   hide_mode:

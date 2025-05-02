@@ -9,6 +9,7 @@ mod hook;
 mod instance;
 mod modules;
 mod plugins;
+mod popups;
 mod restoration_and_migrations;
 mod seelen;
 mod seelen_bar;
@@ -18,6 +19,7 @@ mod seelen_weg;
 mod seelen_wm_v2;
 mod state;
 mod system;
+mod tauri_context;
 mod tray;
 mod utils;
 mod widget_loader;
@@ -37,7 +39,7 @@ use error_handler::Result;
 use exposed::register_invoke_handler;
 use itertools::Itertools;
 use modules::{
-    cli::{application::handle_console_cli, AppClient, ServiceClient, SvcAction},
+    cli::{application::handle_console_cli, SvcAction, TcpBgApp, TcpService},
     tray::application::ensure_tray_overflow_creation,
 };
 use plugins::register_plugins;
@@ -55,6 +57,7 @@ use windows_api::WindowsApi;
 
 static APP_HANDLE: OnceLock<tauri::AppHandle<tauri::Wry>> = OnceLock::new();
 static SILENT: AtomicBool = AtomicBool::new(false);
+static STARTUP: AtomicBool = AtomicBool::new(false);
 static VERBOSE: AtomicBool = AtomicBool::new(false);
 
 pub fn is_local_dev() -> bool {
@@ -64,13 +67,13 @@ pub fn is_local_dev() -> bool {
 fn setup(app: &mut tauri::App<tauri::Wry>) -> Result<()> {
     print_initial_information();
     validate_webview_runtime_is_installed(app.handle())?;
+    TcpBgApp::listen_tcp()?;
 
-    if !ServiceClient::is_running() {
-        tauri::async_runtime::block_on(ServiceClient::start_service())?;
+    if !TcpService::is_running() {
+        tauri::async_runtime::block_on(TcpService::start_service())?;
     }
 
     check_for_webview_optimal_state(app.handle())?;
-    AppClient::listen_tcp()?;
 
     log_error!(WindowsApi::enable_privilege(SE_SHUTDOWN_NAME));
     log_error!(WindowsApi::enable_privilege(SE_DEBUG_NAME));
@@ -86,11 +89,14 @@ fn setup(app: &mut tauri::App<tauri::Wry>) -> Result<()> {
 
 fn app_callback(_: &tauri::AppHandle<tauri::Wry>, event: tauri::RunEvent) {
     match event {
+        tauri::RunEvent::Ready => {
+            log::info!("Setup was completed, app is ready.");
+        }
         tauri::RunEvent::ExitRequested { api, code, .. } => match code {
             Some(code) => {
                 // if exit code is 0 it means that the app was closed by the user
                 if code == 0 {
-                    log_error!(ServiceClient::request(SvcAction::Stop));
+                    log_error!(TcpService::request(SvcAction::Stop));
                 }
             }
             // prevent close background on webview windows closing
@@ -122,7 +128,7 @@ fn main() -> Result<()> {
     handle_console_cli()?;
 
     if is_already_runnning() {
-        AppClient::open_settings()?;
+        TcpBgApp::request_open_settings()?;
         return Ok(());
     }
 
@@ -130,6 +136,7 @@ fn main() -> Result<()> {
         restart_as_appx()?;
     }
 
+    rust_i18n::set_locale(&seelen_core::state::Settings::get_system_language());
     trace_lock!(PERFORMANCE_HELPER).start("setup");
     let mut app_builder = tauri::Builder::default();
     app_builder = register_plugins(app_builder);
@@ -144,7 +151,7 @@ fn main() -> Result<()> {
             }
             Ok(())
         })
-        .build(tauri::generate_context!())
+        .build(tauri_context::get_context())
         .expect("Error while building tauri application");
 
     app.run(app_callback);

@@ -132,6 +132,8 @@ header:
     shortcuts: Gaaban
     specific_apps: Barnaamijyo gaar ah
     virtual_desk: Desktops Virtual
+home:
+  new_resources: Kheyraadka cusub
 inherit: Dhaxlid
 inProgress: Horusocod ...
 insert: Gelin
@@ -149,6 +151,7 @@ quit: Joojin
 remove: Ka qaadid
 save: Badbaadin
 save_and_restart: Badbaadin & Dib u bilow
+see_more: Arag in dheeraad ah
 shortcuts:
   enable: U fududee fulinta isku dhafan ee isku dhafan (Ahk)
   enable_tooltip: >-
@@ -234,6 +237,10 @@ toolbar:
   delay_to_hide: Dib u dhig si loo qariyo
   delay_to_show: Dib u dhig si loo muujiyo
   dock_side: Meel
+  dynamic_color: Midab firfircoon
+  dynamic_color_tooltip: >-
+    U oggolow asalka firfircoon iyo milix hore oo salka ku haya daaqadda diirada
+    saareysa. (Midabada waxaa lagu wareejin karaa mawduucyo)
   enable: Keeniyaan Qalabka Fancy Toolbar
   height: Dherer
   hide_mode:

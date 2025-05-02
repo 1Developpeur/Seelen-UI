@@ -16,8 +16,9 @@ use crate::{
     instance::SeelenInstanceContainer,
     log_error,
     modules::{
-        cli::{ServiceClient, SvcAction},
+        cli::{SvcAction, TcpService},
         monitors::{MonitorManager, MonitorManagerEvent, MONITOR_MANAGER},
+        system_settings::application::{SystemSettings, SystemSettingsEvent},
     },
     restoration_and_migrations::RestorationAndMigration,
     seelen_rofi::SeelenRofi,
@@ -113,6 +114,7 @@ impl Seelen {
 
     pub fn on_settings_change(&mut self) -> Result<()> {
         let state = FULL_STATE.load();
+        rust_i18n::set_locale(&state.locale());
 
         tauri::async_runtime::spawn(async {
             let state = FULL_STATE.load();
@@ -172,13 +174,13 @@ impl Seelen {
         }
     }
 
-    async fn start_async() -> Result<()> {
-        Self::start_ahk_shortcuts().await?;
-        Ok(())
+    fn on_system_settings_change(event: SystemSettingsEvent) {
+        if event == SystemSettingsEvent::TextScaleChanged {
+            log_error!(trace_lock!(SEELEN).refresh_windows_positions());
+        }
     }
 
     pub fn start(&mut self) -> Result<()> {
-        SEELEN_IS_RUNNING.store(true, std::sync::atomic::Ordering::SeqCst);
         RestorationAndMigration::run_full()?;
 
         // order is important
@@ -186,6 +188,7 @@ impl Seelen {
         declare_system_events_handlers()?;
 
         let state = FULL_STATE.load();
+        rust_i18n::set_locale(&state.locale());
 
         if state.is_rofi_enabled() {
             self.add_rofi()?;
@@ -204,11 +207,9 @@ impl Seelen {
         for (_name, id) in monitors {
             self.add_monitor(id)?;
         }
-        MonitorManager::subscribe(Self::on_monitor_event);
 
-        tauri::async_runtime::spawn(async {
-            log_error!(Self::start_async().await);
-        });
+        MonitorManager::subscribe(Self::on_monitor_event);
+        SystemSettings::subscribe(Self::on_system_settings_change);
 
         self.refresh_windows_positions()?;
 
@@ -221,18 +222,19 @@ impl Seelen {
         }
 
         register_win_hook()?;
+        tauri::async_runtime::spawn(async {
+            log_error!(Self::start_ahk_shortcuts().await);
+        });
+
+        SEELEN_IS_RUNNING.store(true, std::sync::atomic::Ordering::SeqCst);
         Ok(())
     }
 
     /// Stop and release all resources
     pub fn stop(&self) {
         SEELEN_IS_RUNNING.store(false, std::sync::atomic::Ordering::SeqCst);
-        let state = FULL_STATE.load();
-
         release_system_events_handlers();
-        if state.is_weg_enabled() {
-            log_error!(SeelenWeg::restore_taskbar());
-        }
+        let state = FULL_STATE.load();
         if state.is_ahk_enabled() {
             tauri::async_runtime::spawn(async {
                 log_error!(Self::kill_ahk_shortcuts().await);
@@ -277,7 +279,7 @@ impl Seelen {
     }
 
     pub fn set_auto_start(enabled: bool) -> Result<()> {
-        ServiceClient::request(SvcAction::SetStartup(enabled))
+        TcpService::request(SvcAction::SetStartup(enabled))
     }
 
     // TODO: split ahk logic into another file/module

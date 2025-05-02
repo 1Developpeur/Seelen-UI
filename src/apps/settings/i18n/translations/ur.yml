@@ -129,6 +129,8 @@ header:
     shortcuts: شارٹ کٹ
     specific_apps: مخصوص ایپس
     virtual_desk: ورچوئل ڈیسک ٹاپس
+home:
+  new_resources: نئے وسائل
 inherit: وراثت
 inProgress: کام جاری ہے...
 insert: داخل کریں
@@ -146,6 +148,7 @@ quit: چھوڑ دیں
 remove: ہٹا دیں
 save: محفوظ کریں
 save_and_restart: محفوظ کریں اور دوبارہ شروع کریں
+see_more: مزید دیکھیں
 shortcuts:
   enable: مربوط شارٹ کٹ (اے ایچ کے) کو فعال کریں
   enable_tooltip: >-
@@ -231,6 +234,10 @@ toolbar:
   delay_to_hide: چھپانے میں تاخیر
   delay_to_show: دکھانے میں تاخیر
   dock_side: پوزیشن
+  dynamic_color: متحرک رنگ
+  dynamic_color_tooltip: >-
+    مرکوز ونڈو پر مبنی متحرک پس منظر اور پیش منظر کے رنگوں کو فعال کریں۔ (رنگوں
+    کو تھیمز کے ذریعہ زیر کیا جاسکتا ہے)
   enable: فینسی ٹول بار کو فعال کریں
   height: اونچائی
   hide_mode:

@@ -36,17 +36,19 @@ export const cx = (...args: Args[]): string => {
     .join(' ');
 };
 
+export function isDarkModeEnabled() {
+  return window.matchMedia('(prefers-color-scheme: dark)').matches;
+}
+
 export function useDarkMode() {
-  const [isDarkMode, setIsDarkMode] = useState(
-    window.matchMedia('(prefers-color-scheme: dark)').matches,
-  );
+  const [isDarkMode, setIsDarkMode] = useState(isDarkModeEnabled());
 
   useEffect(() => {
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
     const listener = () => setIsDarkMode(mediaQuery.matches);
     mediaQuery.addEventListener('change', listener);
     return () => mediaQuery.removeEventListener('change', listener);
-  });
+  }, []);
 
   return isDarkMode;
 }
@@ -75,13 +77,13 @@ function loadThemes(allThemes: Theme[], selected: string[]) {
   element.textContent = '';
 
   for (const theme of themes) {
-    let layerName = theme.metadata.filename.replace(/[\.]/g, '-') + '-theme';
     const oldKey = OLD_THEME_KEYS_BY_WIDGET_ID[widget.id];
     const cssFileContent =
       theme.styles[widget.id] || (oldKey ? theme.styles[oldKey as WidgetId] : undefined);
     if (!cssFileContent) {
       continue;
     }
+    let layerName = 'theme-' + theme.metadata.filename.replace(/[\.]/g, '_');
     element.textContent += `@layer ${layerName} {\n${cssFileContent}\n}\n`;
   }
 

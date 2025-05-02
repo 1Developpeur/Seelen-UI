@@ -1,4 +1,5 @@
 import { getCurrentWindow } from '@tauri-apps/api/window';
+import { isEqual } from 'lodash';
 import { useEffect, useRef } from 'react';
 
 export function useWindowFocusChange(cb: (focused: boolean) => void) {
@@ -39,4 +40,43 @@ export function useTimeout(cb: () => void, ms: number, deps: any[] = []) {
     ref.current = window.setTimeout(cb, ms);
     return clearLastTimeout;
   }, [ms, ...deps]);
+}
+
+export function useSyncClockInterval(cb: () => void, on: 'minutes' | 'seconds', deps: any[] = []) {
+  const ref = useRef<number | null>(null);
+
+  const clearLastInterval = () => {
+    if (ref.current) {
+      clearInterval(ref.current);
+    }
+  };
+
+  useEffect(() => {
+    clearLastInterval();
+
+    const now = new Date();
+    let msToWaitForClockSync = 0;
+    if (on === 'minutes') {
+      const secondsUntilNextMinute = 60 - now.getSeconds();
+      msToWaitForClockSync = secondsUntilNextMinute * 1000 - now.getMilliseconds();
+    } else if (on === 'seconds') {
+      msToWaitForClockSync = 1000 - now.getMilliseconds();
+    }
+
+    setTimeout(() => {
+      cb();
+      let interval = on === 'minutes' ? 60 * 1000 : 1000;
+      ref.current = window.setInterval(cb, interval);
+    }, msToWaitForClockSync);
+
+    return clearLastInterval;
+  }, [on, ...deps]);
+}
+
+export default function useDeepCompareEffect(callback: () => void, dependencies: any[]) {
+  const currentDependenciesRef = useRef<any[]>();
+  if (!isEqual(currentDependenciesRef.current, dependencies)) {
+    currentDependenciesRef.current = dependencies;
+  }
+  useEffect(callback, [currentDependenciesRef.current]);
 }

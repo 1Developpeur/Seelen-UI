@@ -64,7 +64,7 @@ export function SeelenWeg() {
   const settings = useSelector(Selectors.settings);
   const isOverlaped = useSelector(Selectors.isOverlaped);
 
-  let isReorderDisabled: boolean = useSelector(Selectors.reorderDisabled);
+  const isReorderDisabled = useSelector(Selectors.reorderDisabled);
   const pinnedOnLeft = useSelector(Selectors.itemsOnLeft);
   const pinnedOnCenter = useSelector(Selectors.itemsOnCenter);
   const pinnedOnRight = useSelector(Selectors.itemsOnRight);
@@ -96,29 +96,6 @@ export function SeelenWeg() {
         break;
     }
   }, [isOverlaped, settings]);
-
-  const getSeparatorComplementarySize = useCallback(
-    (sideElements: number, centerElements: number) => {
-      let size = '1px';
-
-      if (settings.mode === SeelenWegMode.FullWidth) {
-        size = `calc(50% - (${settings.size + settings.spaceBetweenItems}px * ${
-          sideElements + centerElements / 2
-        }) - ${settings.spaceBetweenItems}px)`;
-      }
-
-      if (settings.position === SeelenWegSide.Top || settings.position === SeelenWegSide.Bottom) {
-        return {
-          width: size,
-        };
-      }
-
-      return {
-        height: size,
-      };
-    },
-    [settings],
-  );
 
   const onReorderPinned = useCallback((apps: SwItem[]) => {
     let extractedPinned: SwItem[] = [];
@@ -159,11 +136,11 @@ export function SeelenWeg() {
   const isHorizontal =
     settings.position === SeelenWegSide.Top || settings.position === SeelenWegSide.Bottom;
 
-  const shit = useCallback((isOpen: boolean) => {
+  const idkWhatDoesThis = useCallback((isOpen: boolean) => {
     setAssociatedViewCounter((current) => calculateAssociatedViewCounter(current, isOpen));
   }, []);
 
-  const projectSwItem = (item: SwItem) => ItemByType(item, !isReorderDisabled, shit);
+  const projectSwItem = (item: SwItem) => ItemByType(item, idkWhatDoesThis);
 
   return (
     <WithContextMenu items={getSeelenWegMenu(t, isTemporalOnlyWegBar, isReorderDisabled)}>
@@ -205,7 +182,6 @@ export function SeelenWeg() {
                 visible: settings.visibleSeparators,
               })}
               drag={false}
-              style={getSeparatorComplementarySize(pinnedOnLeft.length, pinnedOnCenter.length)}
             />,
             ...pinnedOnCenter.map(projectSwItem),
             <Reorder.Item
@@ -216,7 +192,6 @@ export function SeelenWeg() {
                 visible: settings.visibleSeparators,
               })}
               drag={false}
-              style={getSeparatorComplementarySize(pinnedOnRight.length, pinnedOnCenter.length)}
             />,
             ...pinnedOnRight.map(projectSwItem),
           ]}
@@ -225,24 +200,24 @@ export function SeelenWeg() {
   );
 }
 
-function ItemByType(item: SwItem, drag: boolean, callback: (isOpen: boolean) => void) {
+function ItemByType(item: SwItem, callback: (isOpen: boolean) => void) {
   if (item.type === WegItemType.Pinned) {
     if (item.subtype === 'App') {
-      return <UserApplication key={item.id} item={item} drag={drag} onAssociatedViewOpenChanged={callback} />;
+      return <UserApplication key={item.id} item={item} onAssociatedViewOpenChanged={callback} />;
     }
     return <FileOrFolder key={item.id} item={item} />;
   }
 
   if (item.type === WegItemType.Temporal) {
-    return <UserApplication key={item.id} item={item} drag={drag} onAssociatedViewOpenChanged={callback} />;
+    return <UserApplication key={item.id} item={item} onAssociatedViewOpenChanged={callback} />;
   }
 
   if (item.type === WegItemType.Media) {
-    return <MediaSession key={item.id} item={item} drag={drag} />;
+    return <MediaSession key={item.id} item={item} />;
   }
 
   if (item.type === WegItemType.StartMenu) {
-    return <StartMenu key={item.id} item={item} drag={drag} />;
+    return <StartMenu key={item.id} item={item} />;
   }
 
   return null;

@@ -130,6 +130,8 @@ header:
     shortcuts: Хэв хаягдал
     specific_apps: ТУСГАЙ АЖИЛЛАГАА
     virtual_desk: Виржопын ширээний гутал
+home:
+  new_resources: Шинэ нөөц
 inherit: Удамших
 inProgress: Явагдаж байна ...
 insert: Оруулах
@@ -147,6 +149,7 @@ quit: Орхих
 remove: Зөөх
 save: Аврах
 save_and_restart: Хадгалах & дахин эхлүүлнэ үү
+see_more: Дэлгэрэнгүйг үзэх
 shortcuts:
   enable: Нэгдсэн товчлолыг идэвхжүүлэх (AHK)
   enable_tooltip: Seelen Core Api ашиглан өөрийн товчлолуудыг хэрэгжүүлэхийг идэвхгүй болго
@@ -230,6 +233,10 @@ toolbar:
   delay_to_hide: Нуухыг хойшлуулах
   delay_to_show: Үзүүлэхийг хойшлуулсан
   dock_side: Байрлал
+  dynamic_color: Доникийн өнгө
+  dynamic_color_tooltip: >-
+    Динамик арын дэвсгэр ба урд талбайн өнгийг төвлөрүүлсэн цонхноос идэвхжүүл.
+    (Өнгө нь сэдвээр хүчингүй болгож болно)
   enable: Ширээний хэрэгслийн самбарыг идэвхжүүлэх
   height: Өндөрлөг
   hide_mode:

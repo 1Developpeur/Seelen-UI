@@ -176,7 +176,7 @@ impl TrayIconManager {
     /// their side. These windows that fail also do not re-add their icons
     /// to the Windows taskbar when `explorer.exe` is restarted ordinarily.
     pub fn refresh_icons() -> Result<()> {
-        log::info!("Refreshing icons by sending `TaskbarCreated` message.");
+        log::trace!("Refreshing icons by sending `TaskbarCreated` message.");
         let msg = WindowsString::from("TaskbarCreated");
         let msg = unsafe { RegisterWindowMessageW(msg.as_pcwstr()) };
         if msg == 0 {
@@ -238,6 +238,7 @@ impl TrayIconManager {
         Ok(())
     }
 
+    // TODO: remove this, instead hide sys tray module in case of disabled
     pub fn enable_chevron() -> Result<()> {
         let hkcr = RegKey::predef(HKEY_CURRENT_USER);
         let settings = hkcr.open_subkey_with_flags(
@@ -257,7 +258,7 @@ impl TrayIconManager {
         let list = settings.get_raw_value("UIOrderList")?.bytes;
 
         let mut windows = Vec::new();
-        WindowEnumerator::new().for_each_v2(|w| {
+        WindowEnumerator::new().for_each(|w| {
             if let Ok(path) = w.process().program_path() {
                 windows.push((w.address(), path.to_string_lossy().to_lowercase()));
             }

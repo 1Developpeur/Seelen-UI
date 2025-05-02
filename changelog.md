@@ -1,6 +1,106 @@
 # Changelog
 
 ## [Unreleased]
+## [2.3.2]
+### enhancements
+- mini performance improve on dock.
+
+### fix
+- resources not being updated correctly.
+
+## [2.3.1]
+### breaking changes
+- rename scope variables for toolbar plugins.
+
+### refactor
+- improve inner code quality on toolbar plugins.
+
+### enhancements
+- improve robustness on toolbar items to avoid blue screen.
+
+## [2.3.0]
+### breaking changes
+- remove mathjs eval by an more accurated eval for js code in toolbar plugins. This will break any plugin created before v2.2.10.
+
+### features
+- add resources endpoint to home tab on settings.
+- add customizable and reusable popups implementation.
+- improvements on toolbar plugins system.
+- allow set buttons with custom actions on toolbar, via toolbar plugins.
+- add restore to default button for toolbar structure.
+- allow fetching remote data on toolbar plugins.
+
+### enhancements
+- reduce CPU usage on slu-service process.
+- improve ui on toolbar modules.
+
+### fix
+- media player styles on toolbar.
+- steam pin item on dock not working properly.
+- plugins not being updated on toolbar.
+
+## [2.2.9]
+### enhancements
+- store service logs in a file to help debugging.
+- wait for native shell on startup before start seelen ui.
+
+## [2.2.7]
+### fix
+- dock items not opening correctly.
+
+## [2.2.6]
+### feature
+- icons on icon packs now can declare a mask that could be used by themes.
+
+### enhancements
+- add custom icons to bluetooth devices.
+- allow set different icons by color scheme (light or dark) on icon packs.
+
+### fix
+- no dragable dock files and folders.
+- focusing widgets on creation.
+- not opening settings window when starting the app with an instance already running.
+
+## [2.2.4]
+### enhancements
+- add suspend/resume logic.
+
+### fix
+- not restoring native taskbar on close/crash.
+- clear all notifications button not updating UI.
+- not translated date on chinese and norwegian.
+
+## [2.2.3]
+### enhancements
+- wrap webview console as soon as posible to avoid missing errors on logs.
+- wait some seconds before remove media players to avoid shifting on chrome.
+
+### refactor
+- remove minified classnames and add do-not-use prefix to be clear to users.
+
+### fix
+- panic on media module when loading initial devices.
+- discord window without umid (for now umid was hardcoded).
+- focused app not updating on title change.
+- not considerating accesibility text scale factor on toolbar and dock.
+- wheel not changing volume level.
+- clear all notifications button not working correctly.
+
+## [2.2.2]
+### enhancements
+- add option to disable dynamic colors on toolbar.
+- reduce notification arrival time on screen from 10 seconds to 5 seconds.
+
+### fix
+- not showing some notifications.
+- crash when disabling a monitor on windows native settings.
+- unsyncronized clock on toolbar.
+
+## [2.2.1]
+### enhancements
+- add new bundled theme as example of animated icons with css.
+
+## [2.2.0]
 ### features
 - add option to disable app thumbnail generation (dock).
 - allow lock the dock/toolbar items.

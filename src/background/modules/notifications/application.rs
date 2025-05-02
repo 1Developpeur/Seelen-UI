@@ -10,6 +10,7 @@ use std::{
 use lazy_static::lazy_static;
 use parking_lot::Mutex;
 use seelen_core::system_state::{AppNotification, Toast, ToastBindingEntry};
+use tauri::Manager;
 use windows::{
     ApplicationModel::AppInfo,
     Foundation::{TypedEventHandler, Uri},
@@ -26,9 +27,9 @@ use crate::{
     error_handler::Result,
     event_manager, log_error,
     modules::uwp::get_hightest_quality_posible,
-    seelen_weg::icon_extractor::extract_and_save_icon_umid,
+    seelen::get_app_handle,
     trace_lock,
-    utils::{convert_file_to_src, spawn_named_thread},
+    utils::{convert_file_to_src, icon_extractor::extract_and_save_icon_umid, spawn_named_thread},
     windows_api::traits::EventRegistrationTokenExt,
 };
 
@@ -36,6 +37,8 @@ lazy_static! {
     pub static ref NOTIFICATION_MANAGER: Arc<Mutex<NotificationManager>> = Arc::new(Mutex::new(
         NotificationManager::new().expect("Failed to create notification manager")
     ));
+    pub static ref LOADED_NOTIFICATIONS: Arc<Mutex<HashSet<u32>>> =
+        Arc::new(Mutex::new(HashSet::new()));
 }
 
 static RELEASED: AtomicBool = AtomicBool::new(true);
@@ -44,11 +47,11 @@ static RELEASED: AtomicBool = AtomicBool::new(true);
 pub enum NotificationEvent {
     Added(u32),
     Removed(u32),
+    Cleared,
 }
 
 pub struct NotificationManager {
     notifications: Vec<AppNotification>,
-    notifications_id: HashSet<u32>,
     manager: ToastNotificationManagerForUser,
     listener: UserNotificationListener,
     event_handler: TypedEventHandler<UserNotificationListener, UserNotificationChangedEventArgs>,
@@ -63,7 +66,6 @@ impl NotificationManager {
     fn new() -> Result<Self> {
         Ok(Self {
             notifications: Vec::new(),
-            notifications_id: HashSet::new(),
             manager: ToastNotificationManager::GetDefault()?,
             listener: UserNotificationListener::Current()?,
             event_handler: TypedEventHandler::new(Self::internal_notifications_change),
@@ -82,10 +84,15 @@ impl NotificationManager {
     }
 
     pub fn clear_notifications(&mut self) -> Result<()> {
-        for notification in self.notifications() {
-            self.listener.RemoveNotification(notification.id)?;
-            Self::event_tx().send(NotificationEvent::Removed(notification.id))?;
+        let mut umids = HashSet::new();
+        for n in self.notifications() {
+            umids.insert(n.app_umid.clone());
         }
+        for umid in umids {
+            let history = self.manager.History()?;
+            history.ClearWithId(&umid.into())?;
+        }
+        Self::event_tx().send(NotificationEvent::Cleared)?;
         Ok(())
     }
 
@@ -93,6 +100,14 @@ impl NotificationManager {
         let access = self.listener.RequestAccessAsync()?.get()?;
         if access != UserNotificationListenerAccessStatus::Allowed {
             return Err("Failed to get notification access".into());
+        }
+
+        let u_notifications = self
+            .listener
+            .GetNotificationsAsync(NotificationKinds::Toast)?
+            .get()?;
+        for u_notification in u_notifications {
+            log_error!(self.load_notification(u_notification));
         }
 
         // TODO: this only works on MSIX/APPX/UWP builds so idk how to make it work on win32 apps
@@ -115,15 +130,6 @@ impl NotificationManager {
             }
         }
 
-        let u_notifications = self
-            .listener
-            .GetNotificationsAsync(NotificationKinds::Toast)?
-            .get()?;
-
-        for u_notification in u_notifications {
-            log_error!(self.load_notification(u_notification));
-        }
-
         Self::subscribe(|e| log_error!(Self::process_event(e)));
         Ok(())
     }
@@ -141,8 +147,7 @@ impl NotificationManager {
         _args: &Option<UserNotificationChangedEventArgs>,
     ) -> windows_core::Result<()> {
         let listener = { UserNotificationListener::Current()? };
-        let mut old_toasts: HashSet<u32> =
-            { trace_lock!(NOTIFICATION_MANAGER).notifications_id.clone() };
+        let mut old_toasts = { trace_lock!(LOADED_NOTIFICATIONS).clone() };
 
         for u_notification in listener
             .GetNotificationsAsync(NotificationKinds::Toast)?
@@ -162,15 +167,19 @@ impl NotificationManager {
     }
 
     fn process_event(event: NotificationEvent) -> Result<()> {
+        let mut manager = trace_lock!(NOTIFICATION_MANAGER);
         match event {
             NotificationEvent::Added(id) => {
                 let u_notification = UserNotificationListener::Current()?.GetNotification(id)?;
-                trace_lock!(NOTIFICATION_MANAGER).load_notification(u_notification)?;
+                manager.load_notification(u_notification)?;
             }
             NotificationEvent::Removed(id) => {
-                let mut manager = trace_lock!(NOTIFICATION_MANAGER);
-                manager.notifications_id.remove(&id);
                 manager.notifications.retain(|n| n.id != id);
+                trace_lock!(LOADED_NOTIFICATIONS).remove(&id);
+            }
+            NotificationEvent::Cleared => {
+                manager.notifications.clear();
+                trace_lock!(LOADED_NOTIFICATIONS).clear();
             }
         }
         Ok(())
@@ -183,34 +192,72 @@ impl NotificationManager {
             .map(|path| PathBuf::from(path.to_os_string()));
 
         for entry in &mut toast.visual.binding.entries {
-            if let ToastBindingEntry::Image(image) = entry {
-                let uri = Uri::CreateUri(&image.src.clone().into())?;
-                let scheme = uri.SchemeName()?.to_string_lossy();
-                let path = PathBuf::from(
-                    Uri::UnescapeComponent(&uri.Path()?)?
-                        .to_string_lossy()
-                        .trim_start_matches('/'),
-                );
+            let ToastBindingEntry::Image(image) = entry else {
+                continue;
+            };
 
-                log::debug!("  Scheme: {} | Path: {}", scheme, path.display());
-                // https://learn.microsoft.com/en-us/windows/uwp/app-resources/uri-schemes
-                // https://learn.microsoft.com/en-us/uwp/schemas/tiles/toastschema/element-image
-                match scheme.as_str() {
-                    "http" | "https" => {}
-                    "ms-appx" | "ms-appx-web" => {
-                        let path = package_path.clone()?.join(path);
-                        if let Some(path) = get_hightest_quality_posible(&path) {
-                            log::debug!("  Resolved Path: {}", path.display());
-                            image.src = convert_file_to_src(&path);
-                        } else {
-                            log::warn!("  Unable to resolve path {}", path.display());
-                        }
-                    }
-                    "file" => {
+            if image.src.is_empty() {
+                continue;
+            }
+
+            let uri = Uri::CreateUri(&image.src.clone().into())?;
+            let scheme = uri.SchemeName()?.to_string_lossy();
+            let uri_path = PathBuf::from(
+                Uri::UnescapeComponent(&uri.Path()?)?
+                    .to_string_lossy()
+                    .trim_start_matches('/'),
+            );
+
+            // https://learn.microsoft.com/en-us/windows/uwp/app-resources/uri-schemes
+            // https://learn.microsoft.com/en-us/uwp/schemas/tiles/toastschema/element-image
+            match scheme.as_str() {
+                "http" | "https" => {}
+                "ms-appx" | "ms-appx-web" => {
+                    let path = package_path.clone()?.join(uri_path);
+                    if let Some((path, _)) = get_hightest_quality_posible(&path) {
+                        log::debug!("  Resolved path: {}", path.display());
                         image.src = convert_file_to_src(&path);
+                    } else {
+                        log::warn!("  Unable to resolve path {}", path.display());
                     }
-                    _ => {}
                 }
+                "ms-appdata" => {
+                    let parent = if uri_path.starts_with("local") {
+                        "LocalState"
+                    } else if uri_path.starts_with("roaming") {
+                        "LocalCache"
+                    } else {
+                        continue;
+                    };
+
+                    let uri_path = PathBuf::from(
+                        Uri::UnescapeComponent(&uri.Path()?)?
+                            .to_string_lossy()
+                            .to_lowercase()
+                            .trim_start_matches('/')
+                            .trim_start_matches("local/")
+                            .trim_start_matches("roaming/"),
+                    );
+
+                    let package_family_name = AppInfo::GetFromAppUserModelId(&umid.into())?
+                        .PackageFamilyName()?
+                        .to_string_lossy();
+
+                    let path = get_app_handle()
+                        .path()
+                        .local_data_dir()?
+                        .join("Packages")
+                        .join(package_family_name)
+                        .join(parent)
+                        .join(uri_path);
+
+                    log::debug!("  Resolved path: {}", path.display());
+                    image.src = convert_file_to_src(&path);
+                }
+                "file" => {
+                    image.src = convert_file_to_src(&uri_path);
+                }
+                _ => {}
             }
         }
         Ok(())
@@ -218,10 +265,20 @@ impl NotificationManager {
 
     // this function an in general all the notification system can still be improved on usability and performance
     fn load_notification(&mut self, u_notification: UserNotification) -> Result<()> {
-        self.notifications_id.insert(u_notification.Id()?);
+        {
+            trace_lock!(LOADED_NOTIFICATIONS).insert(u_notification.Id()?);
+        }
         let notification = u_notification.Notification()?;
 
-        let app_info = u_notification.AppInfo()?;
+        let app_info = match u_notification.AppInfo() {
+            Ok(info) => info,
+            Err(_) => {
+                // will fail if the notification was added by an uninstalled app
+                // log::error!("Unable to get app info: {}", error);
+                return Ok(());
+            }
+        };
+
         let display_info = app_info.DisplayInfo()?;
         let app_umid = app_info.AppUserModelId()?;
 
@@ -231,7 +288,10 @@ impl NotificationManager {
             .GetTextElements()?;
         let mut notification_text = Vec::new();
         for text in text_sequence {
-            notification_text.push(text.Text()?.to_string());
+            let text = text.Text()?.to_string_lossy().trim().to_string();
+            if !text.is_empty() {
+                notification_text.push(text);
+            }
         }
 
         let history = self.manager.History()?;
@@ -253,7 +313,9 @@ impl NotificationManager {
                 let mut toast_text = Vec::new();
                 for entry in &toast.visual.binding.entries {
                     if let ToastBindingEntry::Text(text) = entry {
-                        toast_text.push(text.content.clone());
+                        if !text.content.is_empty() {
+                            toast_text.push(text.content.clone().replace("\r\n", "\n"));
+                        }
                     }
                 }
 
@@ -263,6 +325,10 @@ impl NotificationManager {
                     break;
                 }
             }
+        }
+
+        if notification_content.is_none() {
+            log::debug!("NONE FOR {:#?}", notification_text);
         }
 
         // pre-extraction to avoid flickering on the ui

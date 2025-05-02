@@ -38,40 +38,32 @@ impl IconPacksManager {
         self.0.get_mut("system").unwrap()
     }
 
-    /// key could be path or user model id
-    pub fn add_system_app_icon(&mut self, key: &str, target_rel_path: &Path) {
-        let system_pack = self.0.get_mut("system").unwrap();
-        let key = key.trim_start_matches(r"\\?\").to_string();
-        system_pack
-            .apps
-            .insert(key, Icon::Simple(target_rel_path.to_owned()));
+    pub fn add_system_app_icon(&mut self, key: &str, icon: Icon) {
+        let system_pack = self.get_system_mut();
+        system_pack.apps.insert(key.to_string(), icon);
     }
 
-    pub fn add_system_file_icon(&mut self, origin: &Path, target_rel_path: &Path) {
-        let system_pack = self.0.get_mut("system").unwrap();
-        if let Some(ext) = origin.extension() {
-            system_pack.files.insert(
-                ext.to_string_lossy().to_lowercase(),
-                Icon::Simple(target_rel_path.to_owned()),
-            );
-        }
+    pub fn add_system_file_icon(&mut self, origin_extension: &str, icon: Icon) {
+        let system_pack = self.get_system_mut();
+        system_pack.files.insert(origin_extension.to_string(), icon);
     }
 
-    fn resolve_icon_path(&self, icon: &Icon) -> PathBuf {
+    fn icon_exists(&self, icon: &Icon) -> bool {
+        let root = SEELEN_COMMON
+            .user_icons_path()
+            .join(&self.get_system().metadata.filename);
         match icon {
-            Icon::Simple(path) => SEELEN_COMMON
-                .icons_path()
-                .join(&self.get_system().metadata.filename)
-                .join(path),
-            Icon::Dynamic { light, dark: _ } => SEELEN_COMMON
-                .icons_path()
-                .join(&self.get_system().metadata.filename)
-                .join(light),
+            Icon::Static(path) => root.join(path).exists(),
+            Icon::Dynamic {
+                light,
+                dark,
+                mask: _,
+            } => root.join(light).exists() && root.join(dark).exists(),
         }
     }
 
     /// Get icon pack by app user model id, filename or path
-    pub fn get_app_icon_by_key(&self, key: &str) -> Option<PathBuf> {
+    pub fn get_app_icon(&self, key: &str) -> Option<&Icon> {
         let filename = PathBuf::from(key)
             .file_name()
             .map(|p| p.to_string_lossy().to_string());
@@ -82,33 +74,31 @@ impl IconPacksManager {
             None => None,
         });
         if let Some(icon) = maybe_icon {
-            let full_path = self.resolve_icon_path(icon);
-            if full_path.exists() {
-                return Some(full_path);
+            if self.icon_exists(icon) {
+                return Some(icon);
             }
         }
         None
     }
 
-    pub fn get_file_icon(&self, path: &Path) -> Option<PathBuf> {
+    pub fn get_file_icon(&self, path: &Path) -> Option<&Icon> {
         let extension = path.extension()?.to_string_lossy().to_lowercase();
         let icon_pack = self.get_system();
         if let Some(icon) = icon_pack.files.get(extension.as_str()) {
-            let full_path = self.resolve_icon_path(icon);
-            if full_path.exists() {
-                return Some(full_path);
+            if self.icon_exists(icon) {
+                return Some(icon);
             }
         }
         None
     }
 
     pub fn clear_system_icons(&mut self) -> Result<()> {
-        let system_pack = self.0.get_mut("system").unwrap();
+        let system_pack = self.get_system_mut();
         system_pack.apps.clear();
         system_pack.files.clear();
         system_pack.specific.clear();
         let meta = std::ffi::OsStr::new("metadata.yml");
-        for entry in std::fs::read_dir(SEELEN_COMMON.icons_path().join("system"))?.flatten() {
+        for entry in std::fs::read_dir(SEELEN_COMMON.user_icons_path().join("system"))?.flatten() {
             if entry.file_type()?.is_dir() {
                 std::fs::remove_dir_all(entry.path())?;
             } else if entry.file_name() != meta {
@@ -136,11 +126,15 @@ impl IconPacksManager {
         }
 
         let system_pack = self.get_system_mut();
-        let missing_path = SEELEN_COMMON.icons_path().join("system/missing-icon.png");
+        let missing_path = SEELEN_COMMON
+            .user_icons_path()
+            .join("system/missing-icon.png");
         let start_path = SEELEN_COMMON
-            .icons_path()
+            .user_icons_path()
             .join("system/start-menu-icon.svg");
-        let folder_path = SEELEN_COMMON.icons_path().join("system/folder-icon.svg");
+        let folder_path = SEELEN_COMMON
+            .user_icons_path()
+            .join("system/folder-icon.svg");
 
         if !missing_path.exists() || initial {
             std::fs::copy(
@@ -169,21 +163,29 @@ impl IconPacksManager {
             )?;
         }
 
-        system_pack.missing = Some(Icon::Simple(PathBuf::from("missing-icon.png")));
+        system_pack.missing = Some(Icon::Static(PathBuf::from("missing-icon.png")));
         system_pack.specific.insert(
             "@seelen/weg::start-menu".to_string(),
-            Icon::Simple(PathBuf::from("start-menu-icon.svg")),
+            Icon::Dynamic {
+                light: PathBuf::from("start-menu-icon.svg"),
+                dark: PathBuf::from("start-menu-icon.svg"),
+                mask: Some(PathBuf::from("start-menu-icon.svg")),
+            },
         );
         system_pack.specific.insert(
             "@seelen/weg::folder".to_string(),
-            Icon::Simple(PathBuf::from("folder-icon.svg")),
+            Icon::Dynamic {
+                light: PathBuf::from("folder-icon.svg"),
+                dark: PathBuf::from("folder-icon.svg"),
+                mask: Some(PathBuf::from("folder-icon.svg")),
+            },
         );
 
         Ok(())
     }
 
     pub fn write_system_icon_pack(&self) -> Result<()> {
-        let folder = SEELEN_COMMON.icons_path().join("system");
+        let folder = SEELEN_COMMON.user_icons_path().join("system");
         std::fs::create_dir_all(&folder)?;
         let file_path = folder.join("metadata.yml");
         let mut file = OpenOptions::new()
@@ -191,7 +193,7 @@ impl IconPacksManager {
             .create(true)
             .truncate(true)
             .open(&file_path)?;
-        let system_pack = self.0.get("system").unwrap();
+        let system_pack = self.get_system();
         serde_yaml::to_writer(&mut file, system_pack)?;
         Ok(())
     }
@@ -215,7 +217,7 @@ impl FullState {
     }
 
     pub(super) fn load_icons_packs(&mut self, initial: bool) -> Result<()> {
-        let entries = std::fs::read_dir(SEELEN_COMMON.icons_path())?;
+        let entries = std::fs::read_dir(SEELEN_COMMON.user_icons_path())?;
         let mut icon_packs_manager = trace_lock!(self.icon_packs);
         icon_packs_manager.0.clear();
 

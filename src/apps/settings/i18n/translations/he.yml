@@ -127,6 +127,8 @@ header:
     shortcuts: קיצורי דרך
     specific_apps: אפליקציות ספציפיות
     virtual_desk: שולחנות עבודה וירטואליים
+home:
+  new_resources: משאבים חדשים
 inherit: לָרֶשֶׁת
 inProgress: בתהליך...
 insert: לְהַכנִיס
@@ -144,6 +146,7 @@ quit: לְהַפְסִיק
 remove: לְהַסִיר
 save: להציל
 save_and_restart: שמור והפעלה מחדש
+see_more: ראה עוד
 shortcuts:
   enable: אפשר קיצורי דרך משולבים (AHK)
   enable_tooltip: השבת אם תיישם קיצורי דרך משלך באמצעות ממשק ה- API של Seelen Core
@@ -227,6 +230,10 @@ toolbar:
   delay_to_hide: עיכוב להסתיר
   delay_to_show: עיכוב להצגה
   dock_side: מַצָב
+  dynamic_color: צבע דינמי
+  dynamic_color_tooltip: >-
+    אפשר צבעי רקע דינאמי וצבעי חזית המבוססים על חלון ממוקד. (צבעים יכולים להתבגר
+    על ידי נושאים)
   enable: אפשר סרגל כלים מפואר
   height: גוֹבַה
   hide_mode:

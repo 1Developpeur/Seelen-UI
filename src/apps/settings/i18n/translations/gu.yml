@@ -129,6 +129,8 @@ header:
     shortcuts: શૉર્ટકટ્સ
     specific_apps: વિશિષ્ટ એપ્લિકેશનો
     virtual_desk: વર્ચ્યુઅલ ડેસ્કટ .પ
+home:
+  new_resources: નવી સાધનો
 inherit: વારસો મેળવવો
 inProgress: ચાલુ છે...
 insert: દાખલ કરવું
@@ -146,6 +148,7 @@ quit: છોડો
 remove: દૂર કરવું
 save: સાચવો
 save_and_restart: સાચવો અને ફરીથી પ્રારંભ કરો
+see_more: વધુ જુઓ
 shortcuts:
   enable: સંકલિત શૉર્ટકટ્સ સક્ષમ કરો (ahk)
   enable_tooltip: >-
@@ -231,6 +234,10 @@ toolbar:
   delay_to_hide: છુપાવવામાં વિલંબ
   delay_to_show: બતાવવામાં વિલંબ
   dock_side: પદ
+  dynamic_color: ગતિશીલ રંગ
+  dynamic_color_tooltip: >-
+    ધ્યાન કેન્દ્રિત વિંડોના આધારે ગતિશીલ પૃષ્ઠભૂમિ અને અગ્રભૂમિ રંગોને સક્ષમ
+    કરો. (થીમ્સ દ્વારા રંગો ઓવરરાઇડ કરી શકાય છે)
   enable: ફેન્સી ટૂલબાર સક્ષમ કરો
   height: ઊંચાઈ
   hide_mode:

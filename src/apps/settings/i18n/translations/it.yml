@@ -129,6 +129,8 @@ header:
     shortcuts: Scorciatoie
     specific_apps: App Specifiche
     virtual_desk: Desktop Virtuali
+home:
+  new_resources: Nuove risorse
 inherit: Eredita
 inProgress: In corso...
 insert: Inserisci
@@ -146,6 +148,7 @@ quit: Esci
 remove: Rimuovi
 save: Salva
 save_and_restart: Salva e Riavvia
+see_more: Per saperne di più
 shortcuts:
   enable: Abilita Scorciatoie Integrate (ahk)
   enable_tooltip: Disabilita se implementerete le vostre scorciatoie usando l'API Seelen Core
@@ -230,6 +233,10 @@ toolbar:
   delay_to_hide: Ritardo per nascondere
   delay_to_show: Ritardo per mostrare
   dock_side: Posizione
+  dynamic_color: Colore dinamico
+  dynamic_color_tooltip: >-
+    Abilita i colori dinamici di sfondo e primo piano in base alla finestra
+    focalizzata. (I colori possono essere sovrascritti dai temi).
   enable: Abilita Barra Fancy
   height: Altezza
   hide_mode:

@@ -15,7 +15,7 @@
   }
 }
 
-@keyframes rotate {
+@keyframes rotateToTheLeft {
   from {
     transform: rotate(0deg);
   }
@@ -143,8 +143,7 @@
 .media-notifier-open,
 .ft-bar-item-context-menu-open,
 .ft-bar-context-menu-open,
-.userhome-open,
-.userhome-quicksettings-open {
+.userhome-open {
   animation: PopupBaseAnimation 0.2s linear forwards;
 }
 
@@ -158,8 +157,7 @@
 .media-notifier-close,
 .ft-bar-item-context-menu-close,
 .ft-bar-context-menu-close,
-.userhome-close,
-.userhome-quicksettings-close {
+.userhome-close {
   animation: PopupBaseAnimation 0.2s linear forwards;
   animation-direction: reverse;
 }
@@ -203,6 +201,15 @@
     background-color: var(--color-gray-100);
     border-radius: 10px;
   }
+
+  .tb-context-menu {
+    max-height: 60vh;
+    overflow-y: auto;
+
+    > li {
+      min-height: min-content;
+    }
+  }
 }
 
 .ft-bar-item-clickable {
@@ -236,40 +243,67 @@
   min-width: 12px;
   font-size: 10px;
   border-radius: 8px;
-}
 
-.fast-settings {
-  padding: 12px 16px;
-  margin: var(--popups-margin);
-
-  .fast-settings-bg-layer-1 {
-    background-color: var(--color-gray-50);
-    border-radius: 10px;
+  &:empty {
+    display: none;
   }
 }
 
-.fast-settings-power {
-  display: flex;
-  gap: 6px;
+.fast-settings {
+  @extend %popup;
+  width: 300px;
+  position: relative;
+  gap: 4px;
 
-  .fast-settings-item-button {
-    @extend %actionable-button, %flex-centered;
-    flex: 1;
-    border: 1px solid var(--color-gray-600);
-    border-radius: 8px;
-    padding: 8px 12px;
+  .fast-settings-title {
+    z-index: 1;
+    font-weight: 600;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    .fast-settings-item-title-button {
+      position: absolute;
+      top: 0;
+      right: 0;
+      padding: 6px;
+      border-radius: 6px;
+
+      &:hover {
+        backdrop-filter: brightness(0.8);
+      }
+    }
+  }
+
+  .fast-settings-item {
+    z-index: 1;
+    display: flex;
+    gap: 6px;
+    align-items: center;
+
+    .ant-slider {
+      flex: 1;
+    }
+  }
+
+  .fast-settings-power {
+    display: flex;
+    gap: 6px;
+
+    .fast-settings-item-button {
+      @extend %actionable-button, %flex-centered;
+      flex: 1;
+      border: 1px solid var(--color-gray-600);
+      border-radius: 8px;
+      padding: 8px 12px;
+    }
   }
 }
 
 .tray {
-  margin: var(--popups-margin);
-  padding: 10px;
-
-  .tray-bg-layer-1 {
-    background-color: var(--color-gray-50);
-    border-radius: 10px;
-    box-shadow: 0 0 10px 10px #0001;
-  }
+  @extend %popup;
+  width: 250px;
 
   .tray-list {
     @extend %list;
@@ -335,21 +369,28 @@
     @extend %actionable-button;
     .slu-icon {
       color: var(--color-gray-900);
-      animation: rotate 1s linear infinite;
+      animation: rotateToTheLeft 1s linear infinite;
     }
   }
 
   .wlan-selector-entries {
+    @extend %list;
     padding-bottom: 10px;
     border-bottom: 1px solid var(--color-gray-300);
     overflow-y: auto;
     max-height: 30vh;
 
     .wlan-selector-empty {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 12px;
       font-style: italic;
     }
 
     .wlan-entry {
+      display: flex;
+      flex-direction: column;
       min-height: min-content;
       padding: 12px 10px;
       border-radius: 8px;
@@ -364,6 +405,9 @@
       }
 
       .wlan-entry-info {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
         font-weight: 600;
         gap: 8px;
 
@@ -383,6 +427,17 @@
           padding: 2px 4px;
         }
       }
+
+      .wlan-entry-fields {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+
+      .wlan-entry-actions {
+        display: flex;
+        justify-content: flex-end;
+      }
     }
   }
 
@@ -394,14 +449,8 @@
 }
 
 .media-control {
-  margin: var(--popups-margin);
-  width: 300px;
-  padding: 10px;
-
-  .bg-layer-1 {
-    background-color: var(--color-gray-50);
-    border-radius: 10px;
-  }
+  @extend %popup;
+  gap: 0px;
 
   .media-device-group {
     display: flex;
@@ -529,69 +578,69 @@
   padding: 8px;
   gap: 8px;
   height: min-content;
-}
 
-.media-session-thumbnail-container {
-  position: relative;
-  z-index: 2;
-  width: 100%;
-}
+  .media-session-thumbnail-container {
+    position: relative;
+    z-index: 2;
+    width: 100%;
 
-.media-session-app-icon {
-  position: absolute;
-  z-index: 3;
-  width: 25%;
-  aspect-ratio: 1/1;
-  right: 5%;
-  bottom: 5%;
-  object-fit: contain;
-}
+    .media-session-app-icon {
+      position: absolute;
+      z-index: 3;
+      width: 25%;
+      aspect-ratio: 1/1;
+      right: 5%;
+      bottom: 5%;
+      object-fit: contain;
+    }
 
-.media-session-thumbnail {
-  border-radius: 8px;
-  width: 100%;
-  aspect-ratio: 1/1;
-  object-fit: contain;
-  background: #0004;
-}
+    .media-session-thumbnail {
+      border-radius: 8px;
+      width: 100%;
+      aspect-ratio: 1/1;
+      object-fit: contain;
+      background: #0004;
+    }
+  }
 
-.media-session-blurred-thumbnail {
-  filter: blur(15px) brightness(125%) contrast(125%);
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  object-fit: fill;
-}
+  .media-session-blurred-thumbnail {
+    filter: blur(15px) brightness(125%) contrast(125%);
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    object-fit: fill;
+  }
 
-.media-session-info {
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  overflow: hidden;
-  white-space: nowrap;
-}
+  .media-session-info {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    overflow: hidden;
+    white-space: nowrap;
 
-.media-session-title,
-.media-session-author {
-  position: relative;
-  align-self: flex-start;
-  font-size: 0.7rem;
-  text-align: center;
-  min-width: 100%;
-  animation: leftToRight 5s infinite alternate ease-in-out;
-}
+    .media-session-title,
+    .media-session-author {
+      position: relative;
+      align-self: flex-start;
+      font-size: 0.7rem;
+      text-align: center;
+      min-width: 100%;
+      animation: leftToRight 5s infinite alternate ease-in-out;
+    }
 
-.media-session-title {
-  font-weight: 600;
-  font-size: 1rem;
-}
+    .media-session-title {
+      font-weight: 600;
+      font-size: 1rem;
+    }
 
-.media-session-actions {
-  display: flex;
-  justify-content: center;
-  gap: 8px;
-  margin-top: 4px;
+    .media-session-actions {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      margin-top: 4px;
+    }
+  }
 }
 
 .notifications {
@@ -754,14 +803,8 @@
 }
 
 .calendar-container {
-  margin: var(--popups-margin);
+  @extend %popup;
   width: 350px;
-  padding: 10px;
-
-  .bg-layer-1 {
-    background-color: var(--color-gray-50);
-    border-radius: 12px;
-  }
 
   .calendar-header {
     display: flex;
@@ -791,7 +834,6 @@
       .calendar-navigator {
         font-size: 1.2em;
         padding: 3px 8px;
-        cursor: pointer;
         background-color: transparent;
         transition: 0.2s ease-in;
         transition-property: color, background-color;
@@ -837,17 +879,8 @@
 }
 
 .userhome {
-  @extend %list;
-  margin: var(--popups-margin);
-  width: 300px;
-  box-shadow: 0 0 10px 10px #0001;
-  padding: 10px;
-  max-height: calc(99vh - var(--config-height));
-
-  .userhome-bg-layer-1 {
-    background-color: var(--color-gray-50);
-    border-radius: 10px;
-  }
+  @extend %popup;
+  gap: 4px;
 
   .userhome-label {
     @extend %section-title;
@@ -1064,7 +1097,7 @@
       @extend %actionable-button;
       .slu-icon {
         color: var(--color-gray-900);
-        animation: rotate 1s linear infinite;
+        animation: rotateToTheLeft 1s linear infinite;
       }
     }
   }
@@ -1100,17 +1133,6 @@
         .bluetooth-entry-info-label {
           @extend %overflowable-text;
           flex: 1;
-        }
-
-        .bluetooth-entry-info-img {
-          height: 1rem;
-          width: 1rem;
-          object-fit: contain;
-          filter: invert(1);
-
-          @media (prefers-color-scheme: dark) {
-            filter: invert(0);
-          }
         }
       }
     }

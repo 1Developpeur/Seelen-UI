@@ -131,6 +131,8 @@ header:
     shortcuts: Դյուրանցումներ
     specific_apps: Հատուկ ծրագրեր
     virtual_desk: Վիրտուալ աշխատասեղաններ
+home:
+  new_resources: Նոր ռեսուրսներ
 inherit: Ժառանգել
 inProgress: Ընթացքի մեջ է...
 insert: Տեղադրել
@@ -148,6 +150,7 @@ quit: Թողնել
 remove: Հեռացնել
 save: Խնայել
 save_and_restart: Պահել եւ վերագործարկել
+see_more: Տեսնել ավելին
 shortcuts:
   enable: Միացնել ինտեգրված դյուրանցումները (AHK)
   enable_tooltip: >-
@@ -234,6 +237,10 @@ toolbar:
   delay_to_hide: Հետաձգել թաքցնելը
   delay_to_show: Ցուցադրման ուշացում
   dock_side: Դիրք
+  dynamic_color: Դինամիկ գույն
+  dynamic_color_tooltip: >-
+    Միացնել դինամիկ ֆոնային եւ առաջին պլանների գույները, որոնք հիմնված են
+    կենտրոնացած պատուհանի վրա: (Գույները կարող են շրջանցվել թեմաներով)
   enable: Միացնել Fancy Toolbar- ը
   height: Բարձրություն
   hide_mode:

@@ -129,6 +129,8 @@ header:
     shortcuts: Lasterbideak
     specific_apps: Aplikazio espezifikoak
     virtual_desk: Mahaigain birtualak
+home:
+  new_resources: Baliabide berriak
 inherit: Jarauntsi
 inProgress: Abian ...
 insert: Txertatu
@@ -146,6 +148,7 @@ quit: Laga
 remove: Atera
 save: Aurreztu
 save_and_restart: Gorde eta berrabiarazi
+see_more: Ikusi gehiago
 shortcuts:
   enable: Gaitu lasterbide integratuak (Ahk)
   enable_tooltip: Desgaitu Seelen Core APIa erabiliz zure lasterbideak ezartzen badituzu
@@ -230,6 +233,10 @@ toolbar:
   delay_to_hide: Ezkutatzeko atzeratu
   delay_to_show: Erakusteko atzerapena
   dock_side: Kokaleku
+  dynamic_color: Kolore dinamikoa
+  dynamic_color_tooltip: >-
+    Gaitu fokatutako leihoan oinarritutako atzeko plano eta lehen planoko kolore
+    dinamikoak. (Koloreak gaiak gainditu daitezke)
   enable: Gaitu tresna-barra
   height: Luzera
   hide_mode:

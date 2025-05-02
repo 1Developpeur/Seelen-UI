@@ -7,7 +7,7 @@ import { useSelector } from 'react-redux';
 import { Item } from '../item/infra/infra';
 
 import { Selectors } from '../shared/store/app';
-import { useInterval } from 'src/apps/shared/hooks';
+import { useSyncClockInterval } from 'src/apps/shared/hooks';
 
 import { WithDateCalendar } from './Calendar';
 
@@ -15,12 +15,18 @@ interface Props {
   module: DateToolbarItem;
 }
 
+const momentJsLangMap: { [key: string]: string } = {
+  'no': 'nb',
+  'zh': 'zh-cn',
+};
+
 export function DateModule({ module }: Props) {
   const dateFormat = useSelector(Selectors.dateFormat);
 
   const {
-    i18n: { language },
+    i18n: { language: lang },
   } = useTranslation();
+  let language = momentJsLangMap[lang] || lang;
 
   const [date, setDate] = useState(moment().locale(language).format(dateFormat));
 
@@ -29,12 +35,11 @@ export function DateModule({ module }: Props) {
     setDate(moment().locale(language).format(dateFormat));
   }, [dateFormat, language]);
 
-  let interval = dateFormat.includes('ss') ? 1000 : 1000 * 60;
-  useInterval(
+  useSyncClockInterval(
     () => {
       setDate(moment().locale(language).format(dateFormat));
     },
-    interval,
+    dateFormat.includes('ss') ? 'seconds' : 'minutes',
     [dateFormat, language],
   );
 

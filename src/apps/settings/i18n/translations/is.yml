@@ -129,6 +129,8 @@ header:
     shortcuts: Flýtileiðir
     specific_apps: Sérstök forrit
     virtual_desk: Sýndarskjáborð
+home:
+  new_resources: Ný úrræði
 inherit: Erfa
 inProgress: Í vinnslu...
 insert: Settu inn
@@ -146,6 +148,7 @@ quit: Hættu
 remove: Fjarlægðu
 save: Vista
 save_and_restart: Vista og endurræsa
+see_more: Sjáðu meira
 shortcuts:
   enable: Virkja samþætta flýtileiðir (AHK)
   enable_tooltip: Slökktu á ef þú munt innleiða eigin flýtileiðir með Seelen Core API
@@ -230,6 +233,10 @@ toolbar:
   delay_to_hide: Seinkun á að fela
   delay_to_show: Seinkun á sýningu
   dock_side: Staða
+  dynamic_color: Kraftmikinn litur
+  dynamic_color_tooltip: >-
+    Virkja kraftmikinn bakgrunn og forgrunni liti byggðir á einbeittum glugga.
+    (Hægt er að hnekkja litum með þemum)
   enable: Virkja Fancy tækjastiku
   height: Hæð
   hide_mode:

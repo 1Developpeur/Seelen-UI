@@ -129,6 +129,8 @@ header:
     shortcuts: Pintasan
     specific_apps: Aplikasi khusus
     virtual_desk: Desktop maya
+home:
+  new_resources: Sumber baru
 inherit: Mewarisi
 inProgress: Dalam proses ...
 insert: Masukkan
@@ -146,6 +148,7 @@ quit: Berhenti
 remove: Keluarkan
 save: Simpan
 save_and_restart: Jimat & mulakan semula
+see_more: Lihat lagi
 shortcuts:
   enable: Dayakan Pintasan Bersepadu (AHK)
   enable_tooltip: >-
@@ -232,6 +235,10 @@ toolbar:
   delay_to_hide: Bertangguh untuk bersembunyi
   delay_to_show: Kelewatan untuk menunjukkan
   dock_side: Kedudukan
+  dynamic_color: Warna dinamik
+  dynamic_color_tooltip: >-
+    Dayakan latar belakang dinamik dan warna latar depan berdasarkan tetingkap
+    fokus. (Warna boleh ditindih oleh tema)
   enable: Dayakan bar alat mewah
   height: Ketinggian
   hide_mode:

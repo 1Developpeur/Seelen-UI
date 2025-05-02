@@ -129,6 +129,8 @@ header:
     shortcuts: Dreceres
     specific_apps: Aplicacions específiques
     virtual_desk: Desktops virtuals
+home:
+  new_resources: Recursos nous
 inherit: Heretar
 inProgress: En progrés...
 insert: Inserir
@@ -146,6 +148,7 @@ quit: Abandonar
 remove: Treure
 save: Estalviar
 save_and_restart: Desar i reiniciar
+see_more: Veure més
 shortcuts:
   enable: Activa les dreceres integrades (AHK)
   enable_tooltip: >-
@@ -232,6 +235,10 @@ toolbar:
   delay_to_hide: Tarda en amagar-se
   delay_to_show: Retard per mostrar
   dock_side: Posició
+  dynamic_color: Color dinàmic
+  dynamic_color_tooltip: >-
+    Activa els colors dinàmics de fons i en primer pla basats en la finestra
+    centrada. (Els colors es poden anul·lar per temes)
   enable: Activa la barra d’eines de luxe
   height: Altura
   hide_mode:

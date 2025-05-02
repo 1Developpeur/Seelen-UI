@@ -154,23 +154,14 @@
   object-fit: contain;
   fill: var(--config-accent-lighter-color);
 
-  &.weg-item-start-icon, &.weg-item-folder-icon {
-    position: relative;
-    filter: none;
+  &.weg-item-start-icon {
+    width: 75%;
+    height: 75%;
+  }
 
-    &::before {
-      content: "";
-      position: absolute;
-      width: 100%;
-      height: 100%;
-      /* this is var present for any weg-item-icon, not only the start or folder icon */
-      mask-image: var(--icon-url);
-      mask-repeat: no-repeat;
-      mask-size: contain;
-      mask-position: center;
-      mask-mode: luminance;
-      background-color: var(--config-accent-light-color);
-    }
+  &.weg-item-start-icon,
+  &.weg-item-folder-icon {
+    filter: none;
   }
 }
 

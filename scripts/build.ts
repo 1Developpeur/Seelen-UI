@@ -1,4 +1,5 @@
 import esbuild from 'esbuild';
+import CssModulesPlugin from 'esbuild-css-modules-plugin';
 import express from 'express';
 import fs from 'fs';
 import path from 'path';
@@ -29,54 +30,39 @@ async function extractIconsIfNecessary() {
     return;
   }
 
-  console.info('Extracting SVG Icons');
-  console.time('Bundle Lazy Icons');
+  console.info('Extracting SVG Lazy Icons');
+  console.time('Lazy Icons');
   fs.mkdirSync('./dist/icons', { recursive: true });
 
-  const promises = [
-    import('react-icons/ai'),
-    import('react-icons/bi'),
-    import('react-icons/bs'),
-    import('react-icons/cg'),
-    import('react-icons/ci'),
-    import('react-icons/di'),
-    import('react-icons/fa'),
-    import('react-icons/fa6'),
-    import('react-icons/fc'),
-    import('react-icons/fi'),
-    import('react-icons/gi'),
-    import('react-icons/go'),
-    import('react-icons/gr'),
-    import('react-icons/hi'),
-    import('react-icons/hi2'),
-    import('react-icons/im'),
-    import('react-icons/io'),
-    import('react-icons/io5'),
-    import('react-icons/lia'),
-    import('react-icons/lu'),
-    import('react-icons/md'),
-    import('react-icons/pi'),
-    import('react-icons/ri'),
-    import('react-icons/rx'),
-    import('react-icons/si'),
-    import('react-icons/sl'),
-    import('react-icons/tb'),
-    import('react-icons/tfi'),
-    import('react-icons/ti'),
-    import('react-icons/vsc'),
-    import('react-icons/wi'),
-  ];
+  let tsFile = '// This file is generated on build, do not edit.\nexport type IconName =';
+  const entries = fs.readdirSync('./node_modules/react-icons');
 
-  let families = await Promise.all(promises);
-  for (const family of families) {
+  for (const entry of entries) {
+    const entryPath = path.join('./node_modules/react-icons', entry);
+    const isDir = fs.statSync(entryPath).isDirectory();
+
+    if (!isDir || entry === 'lib') {
+      continue;
+    }
+
+    console.info('Extracting icon family:', entry);
+
+    const family = await import(`react-icons/${entry}`);
     for (const [name, ElementConstructor] of Object.entries(family)) {
+      if (typeof ElementConstructor !== 'function') {
+        continue;
+      }
       const element = ElementConstructor({ size: '1em' });
       const svg = renderToStaticMarkup(element);
       fs.writeFileSync(`./dist/icons/${name}.svg`, svg);
     }
+
+    tsFile += `\n  | keyof typeof import('react-icons/${entry}')`;
   }
 
-  console.timeEnd('Bundle Lazy Icons');
+  tsFile += ';\n';
+  fs.writeFileSync('./src/icons.ts', tsFile);
+  console.timeEnd('Lazy Icons');
 }
 
 const appFolders = fs
@@ -103,7 +89,7 @@ const entryPoints = appFolders
 
 entryPoints.push('./src/apps/shared/integrity.ts');
 
-const copyPublicByEntry: esbuild.Plugin = {
+const OwnPlugin: esbuild.Plugin = {
   name: 'copy-public-by-entry',
   setup(build) {
     build.onStart(() => {
@@ -116,6 +102,15 @@ const copyPublicByEntry: esbuild.Plugin = {
         let target = `dist/${folder}`;
         fs.cpSync(source, target, { recursive: true, force: true });
       });
+
+      // move nested folders to root
+      fs.readdirSync('dist/src/apps').forEach((folder) => {
+        let source = `dist/src/apps/${folder}`;
+        let target = `dist/${folder}`;
+        fs.cpSync(source, target, { recursive: true, force: true });
+      });
+      fs.rmSync('dist/src', { recursive: true, force: true });
+
       console.timeEnd('build');
     });
   },
@@ -129,16 +124,16 @@ function startDevServer() {
   });
 }
 
-void (async function main() {
+(async function main() {
   const { isProd, serve } = await getArgs();
 
   await extractIconsIfNecessary();
 
   console.info('Removing old artifacts');
-  appFolders.forEach((folder) => {
-    const filePath = path.join('dist', folder);
-    if (fs.existsSync(filePath)) {
-      fs.rmSync(filePath, { recursive: true, force: true });
+  // delete all in dist less icons
+  fs.readdirSync('dist').forEach((folder) => {
+    if (folder !== 'icons') {
+      fs.rmSync(path.join('dist', folder), { recursive: true, force: true });
     }
   });
 
@@ -158,7 +153,13 @@ void (async function main() {
     loader: {
       '.yml': 'text',
     },
-    plugins: [copyPublicByEntry],
+    plugins: [
+      CssModulesPlugin({
+        localsConvention: 'camelCase',
+        pattern: 'do-not-use-on-themes-[local]-[hash]',
+      }),
+      OwnPlugin,
+    ],
   });
 
   if (serve) {

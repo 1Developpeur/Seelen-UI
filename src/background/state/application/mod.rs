@@ -79,7 +79,7 @@ impl FullState {
             plugins: HashMap::new(),
             widgets: HashMap::new(),
         };
-        manager.load_all()?;
+        manager.load_all()?; // ScaDaned log shows a deadlock here.
         manager.start_listeners()?;
         Ok(manager)
     }
@@ -117,7 +117,7 @@ impl FullState {
         let mut is_only_changing_system_icons = true;
 
         for path in changed.iter() {
-            if path.starts_with(SEELEN_COMMON.icons_path()) && path.ends_with("metadata.yml") {
+            if path.starts_with(SEELEN_COMMON.user_icons_path()) && path.ends_with("metadata.yml") {
                 is_changing_icons_metadata = true;
                 if !path.ends_with("system\\metadata.yml") {
                     is_only_changing_system_icons = false;
@@ -235,7 +235,7 @@ impl FullState {
             SEELEN_COMMON.toolbar_items_path(),
             SEELEN_COMMON.user_app_configs_path(),
             SEELEN_COMMON.history_path(),
-            SEELEN_COMMON.icons_path(),
+            SEELEN_COMMON.user_icons_path(),
             SEELEN_COMMON.user_themes_path(),
             SEELEN_COMMON.user_plugins_path(),
             SEELEN_COMMON.user_widgets_path(),
@@ -317,16 +317,36 @@ impl FullState {
         Ok(())
     }
 
+    /// We log each step on this cuz for some reason a deadlock is happening somewhere.
     fn load_all(&mut self) -> Result<()> {
+        log::trace!("Initial load: settings");
         self.read_settings()?;
+
+        log::trace!("Initial load: weg items");
         self.read_weg_items()?;
+
+        log::trace!("Initial load: toolbar items");
         self.read_toolbar_items()?;
+
+        log::trace!("Initial load: themes");
         self.load_themes()?;
+
+        log::trace!("Initial load: icons packs");
         self.load_icons_packs(true)?;
+
+        log::trace!("Initial load: plugins");
         self.load_settings_by_app()?;
+
+        log::trace!("Initial load: history");
         self.load_history()?;
+
+        log::trace!("Initial load: plugins");
         self.load_plugins()?;
+
+        log::trace!("Initial load: widgets");
         self.load_widgets()?;
+
+        log::trace!("Initial load: profiles");
         self.load_profiles()?;
         Ok(())
     }

@@ -1,6 +1,12 @@
+pub mod app_bar;
 pub mod com;
+pub mod iterator;
 
-use std::{ffi::OsString, os::windows::ffi::OsStringExt, path::PathBuf};
+use std::{
+    ffi::OsString,
+    os::windows::ffi::OsStringExt,
+    path::{Path, PathBuf},
+};
 
 use com::Com;
 use windows::Win32::{
@@ -18,9 +24,9 @@ use windows::Win32::{
         HiDpi::{SetProcessDpiAwarenessContext, DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2},
         Shell::{IShellLinkW, SHGetKnownFolderPath, ShellLink, KF_FLAG_DEFAULT},
         WindowsAndMessaging::{
-            BringWindowToTop, GetForegroundWindow, GetWindowThreadProcessId, IsIconic,
-            SetWindowPos, ShowWindow, ShowWindowAsync, SET_WINDOW_POS_FLAGS, SHOW_WINDOW_CMD,
-            SWP_NOACTIVATE, SWP_NOZORDER, SW_RESTORE,
+            BringWindowToTop, FindWindowW, GetClassNameW, GetForegroundWindow,
+            GetWindowThreadProcessId, IsIconic, SetWindowPos, ShowWindow, ShowWindowAsync,
+            SET_WINDOW_POS_FLAGS, SHOW_WINDOW_CMD, SWP_NOACTIVATE, SWP_NOZORDER, SW_RESTORE,
         },
     },
 };
@@ -172,11 +178,11 @@ impl WindowsApi {
         Ok(())
     }
 
-    pub fn create_temp_shortcut(program: &str, args: &str) -> Result<PathBuf> {
+    pub fn create_temp_shortcut(program: &Path, args: &str) -> Result<PathBuf> {
         Com::run_with_context(|| unsafe {
             let shell_link: IShellLinkW = Com::create_instance(&ShellLink)?;
 
-            let program = WindowsString::from_str(program);
+            let program = WindowsString::from_os_string(program.as_os_str());
             shell_link.SetPath(program.as_pcwstr())?;
 
             let arguments = WindowsString::from_str(args);
@@ -198,5 +204,29 @@ impl WindowsApi {
         Ok(PathBuf::from(OsString::from_wide(unsafe {
             path.as_wide()
         })))
+    }
+
+    pub fn get_class(hwnd: HWND) -> String {
+        let mut text: [u16; 512] = [0; 512];
+        let len = unsafe { GetClassNameW(hwnd, &mut text) };
+        let length = usize::try_from(len).unwrap_or(0);
+        String::from_utf16_lossy(&text[..length])
+    }
+
+    pub fn wait_for_native_shell() {
+        log::info!("Waiting for native shell...");
+        let mut attempt = 0;
+        let class = WindowsString::from_str("Shell_TrayWnd");
+        unsafe {
+            // wait for native shell until 50 attempts or 5 seconds
+            while FindWindowW(class.as_pcwstr(), None).is_err() && attempt < 50 {
+                std::thread::sleep(std::time::Duration::from_millis(100));
+                attempt += 1;
+            }
+        }
+        if attempt == 10 {
+            panic!("Native shell not found");
+        }
+        log::info!("Native shell found, continueing setup...");
     }
 }

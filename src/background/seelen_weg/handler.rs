@@ -1,7 +1,7 @@
 use std::{ffi::OsStr, path::PathBuf};
 
 use image::ImageFormat;
-use seelen_core::state::{PinnedWegItemData, WegItem, WegItemSubtype, WegItems};
+use seelen_core::state::{PinnedWegItemData, RelaunchArguments, WegItem, WegItemSubtype, WegItems};
 use tauri::Emitter;
 use tauri_plugin_shell::ShellExt;
 
@@ -34,12 +34,7 @@ pub fn weg_request_update_previews(handles: Vec<isize>) -> Result<()> {
     for addr in handles {
         let window = Window::from(addr);
 
-        if !window.is_visible() {
-            SeelenWeg::remove_hwnd(&window)?;
-            continue;
-        }
-
-        if window.is_minimized() {
+        if !window.is_visible() || window.is_minimized() {
             continue;
         }
 
@@ -67,36 +62,24 @@ pub fn weg_request_update_previews(handles: Vec<isize>) -> Result<()> {
 #[tauri::command(async)]
 pub fn weg_close_app(hwnd: isize) -> Result<()> {
     let window = Window::from(hwnd);
-    if !window.is_visible() {
-        SeelenWeg::remove_hwnd(&window)?;
-    } else {
-        WindowsApi::post_message(window.hwnd(), WM_CLOSE, 0, 0)?;
-    }
+    WindowsApi::post_message(window.hwnd(), WM_CLOSE, 0, 0)?;
     Ok(())
 }
 
 #[tauri::command(async)]
 pub fn weg_kill_app(hwnd: isize) -> Result<()> {
     let window = Window::from(hwnd);
-    if !window.is_visible() {
-        SeelenWeg::remove_hwnd(&window)?;
-    } else {
-        get_app_handle()
-            .shell()
-            .command("taskkill.exe")
-            .args(["/F", "/PID", &window.process().id().to_string()])
-            .spawn()?;
-    }
+    get_app_handle()
+        .shell()
+        .command("taskkill.exe")
+        .args(["/F", "/PID", &window.process().id().to_string()])
+        .spawn()?;
     Ok(())
 }
 
 #[tauri::command(async)]
 pub fn weg_toggle_window_state(hwnd: isize, was_focused: bool) -> Result<()> {
     let window = Window::from(hwnd);
-    if !window.is_visible() {
-        SeelenWeg::remove_hwnd(&window)?;
-        return Ok(());
-    }
     // was_focused is intented to know if the window was focused before click on the dock item
     // on click the items makes the dock being focused.
     if was_focused {
@@ -109,6 +92,7 @@ pub fn weg_toggle_window_state(hwnd: isize, was_focused: bool) -> Result<()> {
     Ok(())
 }
 
+#[allow(deprecated)]
 #[tauri::command(async)]
 pub fn weg_pin_item(path: PathBuf) -> Result<()> {
     let display_name = if let Some(name) = path.file_name() {
@@ -133,8 +117,10 @@ pub fn weg_pin_item(path: PathBuf) -> Result<()> {
         display_name,
         path: path.clone(),
         is_dir: false,
+        relaunch_command: None,
+        relaunch_program: path.to_string_lossy().to_string(),
+        relaunch_args: None,
         relaunch_in: None,
-        relaunch_command: path.to_string_lossy().to_string(),
         windows: vec![],
         pin_disabled: false,
     };
@@ -143,11 +129,11 @@ pub fn weg_pin_item(path: PathBuf) -> Result<()> {
         data.umid = WindowsApi::get_file_umid(&path).ok();
         let (program, arguments) = WindowsApi::resolve_lnk_target(&path)?;
         data.is_dir = program.is_dir();
-        data.relaunch_command = format!(
-            "\"{}\" {}",
-            program.to_string_lossy(),
-            arguments.to_string_lossy()
-        );
+        data.relaunch_program = program.to_string_lossy().to_string(); //
+        data.relaunch_args = Some(RelaunchArguments::String(
+            arguments.to_string_lossy().to_string(),
+        ));
+
         if program.extension() == Some(OsStr::new("exe")) {
             data.subtype = WegItemSubtype::App;
         }

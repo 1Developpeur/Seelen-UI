@@ -20,47 +20,48 @@ use crate::{
 use crate::error_handler::Result;
 
 pub fn register_bluetooth_events() {
-    BluetoothManager::subscribe(|event| match event {
-        BluetoothEvent::DevicesChanged(items) => {
-            log_error!(get_app_handle().emit(
-                SeelenEvent::BluetoothDevicesChanged,
-                items
-                    .into_iter()
-                    .map_into()
-                    .collect::<Vec<BluetoothDevice>>()
-            ));
-        }
-        BluetoothEvent::DiscoveredDevicesChanged(items) => {
-            log_error!(get_app_handle().emit(
-                SeelenEvent::BluetoothDiscoveredDevicesChanged,
-                items
-                    .into_iter()
-                    .map_into()
-                    .collect::<Vec<BluetoothDevice>>()
-            ));
-        }
-        BluetoothEvent::RadioStateChanged(state) => {
-            log_error!(get_app_handle().emit(SeelenEvent::BluetoothRadioStateChanged, state));
-        }
-    });
-    BluetoothPairManager::subscribe(|event| match event {
-        BluetoothPairEvent::ShowPin(pin, confirmation_needed) => {
-            thread::spawn(move || {
+    std::thread::spawn(|| {
+        log_error!(trace_lock!(BLUETOOTH_MANAGER).register_for_bt_devices());
+
+        BluetoothManager::subscribe(|event| match event {
+            BluetoothEvent::DevicesChanged(items) => {
                 log_error!(get_app_handle().emit(
-                    SeelenEvent::BluetoothPairShowPin,
-                    BluetoothDevicePairShowPinRequest {
-                        pin,
-                        confirmation_needed
-                    }
+                    SeelenEvent::BluetoothDevicesChanged,
+                    items
+                        .into_iter()
+                        .map_into()
+                        .collect::<Vec<BluetoothDevice>>()
                 ));
-            });
-        }
-        BluetoothPairEvent::RequestPin() => {
-            log_error!(get_app_handle().emit(SeelenEvent::BluetoothPairRequestPin, ()));
-        }
-        BluetoothPairEvent::Confirm(_, _) => {
-            // Do not need anything, this is an internal event that is triggered by UI confirmation
-        }
+            }
+            BluetoothEvent::DiscoveredDevicesChanged(items) => {
+                log_error!(get_app_handle().emit(
+                    SeelenEvent::BluetoothDiscoveredDevicesChanged,
+                    items
+                        .into_iter()
+                        .map_into()
+                        .collect::<Vec<BluetoothDevice>>()
+                ));
+            }
+        });
+        BluetoothPairManager::subscribe(|event| match event {
+            BluetoothPairEvent::ShowPin(pin, confirmation_needed) => {
+                thread::spawn(move || {
+                    log_error!(get_app_handle().emit(
+                        SeelenEvent::BluetoothPairShowPin,
+                        BluetoothDevicePairShowPinRequest {
+                            pin,
+                            confirmation_needed
+                        }
+                    ));
+                });
+            }
+            BluetoothPairEvent::RequestPin() => {
+                log_error!(get_app_handle().emit(SeelenEvent::BluetoothPairRequestPin, ()));
+            }
+            BluetoothPairEvent::Confirm(_, _) => {
+                // Do not need anything, this is an internal event that is triggered by UI confirmation
+            }
+        });
     });
 }
 
@@ -78,14 +79,12 @@ pub fn get_connected_bluetooth_devices() -> Result<Vec<BluetoothDevice>> {
 
 #[tauri::command(async)]
 pub fn get_bluetooth_radio_state() -> Result<bool> {
-    let manager = trace_lock!(BLUETOOTH_MANAGER);
-    manager.get_radio_state()
+    Ok(true)
 }
 
 #[tauri::command(async)]
-pub fn set_bluetooth_radio_state(state: bool) -> Result<()> {
-    let manager = trace_lock!(BLUETOOTH_MANAGER);
-    manager.set_radio_state(state)
+pub fn set_bluetooth_radio_state(_state: bool) -> Result<()> {
+    Ok(())
 }
 
 #[tauri::command(async)]

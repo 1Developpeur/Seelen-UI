@@ -18,7 +18,7 @@ use windows::{
 use crate::{
     error_handler::Result,
     modules::{
-        cli::{ServiceClient, SvcAction},
+        cli::{SvcAction, TcpService},
         start::application::START_MENU_MANAGER,
         virtual_desk::{get_vd_manager, VirtualDesktop},
     },
@@ -54,7 +54,10 @@ impl Debug for Window {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("Window")
             .field("handle", &self.0 .0)
-            .field("exe", &self.process().program_exe_name())
+            .field(
+                "exe",
+                &self.process().program_exe_name().unwrap_or_default(),
+            )
             .field("class", &self.class())
             .field("title", &self.title())
             .finish()
@@ -103,6 +106,14 @@ impl Window {
 
         if self.is_electron() {
             let path = process.program_path().ok()?;
+
+            // special manual case like there's no way to call GetCurrentProcessExplicitAppUserModelID without code injection
+            if path.file_name()?.to_string_lossy().to_lowercase() == "discord.exe" {
+                return Some(AppUserModelId::PropertyStore(
+                    "com.squirrel.Discord.Discord".to_string(),
+                ));
+            }
+
             let guard = START_MENU_MANAGER.load();
             let item = guard.get_by_target(&path)?;
             Some(AppUserModelId::PropertyStore(item.umid.clone()?))
@@ -321,7 +332,7 @@ impl Window {
         if self.process().open_handle().is_ok() {
             WindowsApi::show_window(self.hwnd(), command)
         } else {
-            ServiceClient::request(SvcAction::ShowWindow {
+            TcpService::request(SvcAction::ShowWindow {
                 hwnd: self.address(),
                 command: command.0,
             })
@@ -332,7 +343,7 @@ impl Window {
         if self.process().open_handle().is_ok() {
             WindowsApi::show_window_async(self.hwnd(), command)
         } else {
-            ServiceClient::request(SvcAction::ShowWindowAsync {
+            TcpService::request(SvcAction::ShowWindowAsync {
                 hwnd: self.address(),
                 command: command.0,
             })
@@ -343,7 +354,7 @@ impl Window {
         if self.process().open_handle().is_ok() {
             WindowsApi::set_position(self.hwnd(), None, rect, flags)
         } else {
-            ServiceClient::request(SvcAction::SetWindowPosition {
+            TcpService::request(SvcAction::SetWindowPosition {
                 hwnd: self.address(),
                 x: rect.left,
                 y: rect.top,
@@ -358,7 +369,7 @@ impl Window {
         if self.process().open_handle().is_ok() {
             WindowsApi::set_foreground(self.hwnd())
         } else {
-            ServiceClient::request(SvcAction::SetForeground(self.address()))
+            TcpService::request(SvcAction::SetForeground(self.address()))
         }
     }
 }

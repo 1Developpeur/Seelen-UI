@@ -2,6 +2,7 @@ use std::collections::HashMap;
 use std::os::windows::process::CommandExt;
 use std::path::PathBuf;
 
+use seelen_core::state::RelaunchArguments;
 use seelen_core::{command_handler_list, system_state::Color};
 
 use tauri::{Builder, WebviewWindow, Wry};
@@ -13,10 +14,7 @@ use crate::modules::input::Keyboard;
 use crate::modules::virtual_desk::get_vd_manager;
 use crate::seelen::{get_app_handle, Seelen};
 
-use crate::seelen_weg::icon_extractor::{
-    extract_and_save_icon_from_file, extract_and_save_icon_umid,
-};
-
+use crate::utils::icon_extractor::{extract_and_save_icon_from_file, extract_and_save_icon_umid};
 use crate::utils::pwsh::PwshScript;
 use crate::utils::{is_running_as_appx, is_virtual_desktop_supported as virtual_desktop_supported};
 use crate::windows_api::hdc::DeviceContext;
@@ -29,7 +27,7 @@ use crate::{log_error, utils};
 fn select_file_on_explorer(path: String) -> Result<()> {
     get_app_handle()
         .shell()
-        .command("explorer")
+        .command("C:\\Windows\\explorer.exe")
         .args(["/select,", &path])
         .spawn()?;
     Ok(())
@@ -37,21 +35,30 @@ fn select_file_on_explorer(path: String) -> Result<()> {
 
 #[tauri::command(async)]
 fn open_file(path: String) -> Result<()> {
-    std::process::Command::new("explorer.exe")
+    std::process::Command::new("C:\\Windows\\explorer.exe")
         .raw_arg(format!("\"{}\"", path))
         .spawn()?;
     Ok(())
 }
 
 #[tauri::command(async)]
-async fn run_as_admin(program: String, args: Vec<String>) -> Result<()> {
+async fn run_as_admin(program: PathBuf, args: Option<RelaunchArguments>) -> Result<()> {
+    let args = match args {
+        Some(args) => match args {
+            RelaunchArguments::String(args) => args,
+            RelaunchArguments::Array(args) => args.join(" ").trim().to_owned(),
+        },
+        None => String::new(),
+    };
+    log::trace!("Running as admin: {:?} {}", program, args);
+
     let command = if args.is_empty() {
-        format!("Start-Process '{}' -Verb runAs", program)
+        format!("Start-Process '{}' -Verb runAs", program.display())
     } else {
         format!(
             "Start-Process '{}' -Verb runAs -ArgumentList '{}'",
-            program,
-            args.join(" ")
+            program.display(),
+            args
         )
     };
     PwshScript::new(command).execute().await?;
@@ -59,16 +66,28 @@ async fn run_as_admin(program: String, args: Vec<String>) -> Result<()> {
 }
 
 #[tauri::command(async)]
-async fn run(program: PathBuf, args: Vec<String>, working_dir: Option<PathBuf>) -> Result<()> {
+async fn run(
+    program: PathBuf,
+    args: Option<RelaunchArguments>,
+    working_dir: Option<PathBuf>,
+) -> Result<()> {
+    let args = match args {
+        Some(args) => match args {
+            RelaunchArguments::String(args) => args,
+            RelaunchArguments::Array(args) => args.join(" ").trim().to_owned(),
+        },
+        None => String::new(),
+    };
+    log::trace!("Running: {:?} {} in {:?}", program, args, working_dir);
+
     // we create a link file to trick with explorer into a separated process
     // and without elevation in case Seelen UI was running as admin
     // this could take some delay like is creating a file but just are some milliseconds
     // and this exposed funtion is intended to just run certain times
-    let lnk_file =
-        WindowsApi::create_temp_shortcut(&program, &args.join(" "), working_dir.as_deref())?;
+    let lnk_file = WindowsApi::create_temp_shortcut(&program, &args, working_dir.as_deref())?;
     get_app_handle()
         .shell()
-        .command("explorer")
+        .command("C:\\Windows\\explorer.exe")
         .arg(&lnk_file)
         .status()
         .await?;
@@ -118,16 +137,18 @@ fn send_keys(keys: String) -> Result<()> {
     Keyboard::new().send_keys(&keys)
 }
 
+// used to request icon extraction
 #[tauri::command(async)]
-fn get_icon(path: Option<PathBuf>, umid: Option<String>) -> Option<PathBuf> {
-    let mut icon = None;
+fn get_icon(path: Option<PathBuf>, umid: Option<String>) -> Result<()> {
     if let Some(umid) = umid {
-        icon = extract_and_save_icon_umid(&umid.into()).ok();
+        if extract_and_save_icon_umid(&umid.into()).is_ok() {
+            return Ok(());
+        }
     }
-    match path {
-        Some(path) if icon.is_none() => extract_and_save_icon_from_file(&path).ok(),
-        _ => icon,
+    if let Some(path) = path {
+        return extract_and_save_icon_from_file(&path);
     }
+    Ok(())
 }
 
 #[tauri::command(async)]
@@ -187,6 +208,7 @@ async fn show_desktop() -> Result<()> {
 }
 
 pub fn register_invoke_handler(app_builder: Builder<Wry>) -> Builder<Wry> {
+    use crate::popups::handlers::*;
     use crate::seelen_rofi::handler::*;
     use crate::seelen_weg::handler::*;
     use crate::seelen_wm_v2::handler::*;

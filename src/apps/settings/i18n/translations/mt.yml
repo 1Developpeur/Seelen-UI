@@ -131,6 +131,8 @@ header:
     shortcuts: Shortcuts
     specific_apps: Applikazzjonijiet speċifiċi
     virtual_desk: Desktops virtwali
+home:
+  new_resources: Riżorsi ġodda
 inherit: Jirtu
 inProgress: Fil-progress...
 insert: Daħħal
@@ -148,6 +150,7 @@ quit: Nieqaf
 remove: Neħħi
 save: Ħlief
 save_and_restart: Issejvja u terġa 'tibda
+see_more: Ara aktar
 shortcuts:
   enable: Enable Shortcuts Integrati (AHK)
   enable_tooltip: Itfi jekk timplimenta s-shortcuts tiegħek stess billi tuża l-API Seelen Core
@@ -232,6 +235,10 @@ toolbar:
   delay_to_hide: Dewmien biex jinħbew
   delay_to_show: Dewmien biex juri
   dock_side: Pożizzjoni
+  dynamic_color: Kulur dinamiku
+  dynamic_color_tooltip: >-
+    Ippermetti l-isfond dinamiku u l-kuluri tat-tagħrif miksub ibbażati fuq
+    tieqa ffokata. (Il-kuluri jistgħu jiġu mwarrba bit-temi)
   enable: Jippermetti toolbar tal-fancy
   height: Għoli
   hide_mode:

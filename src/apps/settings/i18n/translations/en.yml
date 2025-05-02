@@ -128,6 +128,8 @@ header:
     shortcuts: Shortcuts
     specific_apps: Specific Apps
     virtual_desk: Virtual Desktops
+home:
+  new_resources: New Resources
 inherit: Inherit
 inProgress: In Progress...
 insert: Insert
@@ -145,6 +147,7 @@ quit: Quit
 remove: Remove
 save: Save
 save_and_restart: Save & Restart
+see_more: See More
 shortcuts:
   enable: Enable Integrated Shortcuts (ahk)
   enable_tooltip: Disable if you will implement your own shortcuts using the Seelen Core Api
@@ -229,6 +232,10 @@ toolbar:
   delay_to_hide: Delay to hide
   delay_to_show: Delay to show
   dock_side: Position
+  dynamic_color: Dynamic Color
+  dynamic_color_tooltip: >-
+    Enable dynamic background and foreground colors based on focused window.
+    (Colors can be overridden by themes)
   enable: Enable Fancy Toolbar
   height: Height
   hide_mode:

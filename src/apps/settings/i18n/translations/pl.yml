@@ -131,6 +131,8 @@ header:
     shortcuts: Skróty
     specific_apps: Określone aplikacje
     virtual_desk: Wirtualne komputery stacjonarne
+home:
+  new_resources: Nowe zasoby
 inherit: Dziedziczyć
 inProgress: W trakcie...
 insert: Wstawić
@@ -148,6 +150,7 @@ quit: Zrezygnować
 remove: Usunąć
 save: Ratować
 save_and_restart: Zapisz i uruchom ponownie
+see_more: Zobacz więcej
 shortcuts:
   enable: Włącz zintegrowane skróty (AHK)
   enable_tooltip: Wyłącz, jeśli zaimplementujesz własne skróty za pomocą API Seelen Core
@@ -232,6 +235,10 @@ toolbar:
   delay_to_hide: Opóźnienie w ukryciu
   delay_to_show: Opóźnienie w pokazie
   dock_side: Pozycja
+  dynamic_color: Dynamiczny kolor
+  dynamic_color_tooltip: >-
+    Włącz dynamiczne kolory tła i pierwszego planu w oparciu o okno, na którym
+    skupiono uwagę. (Kolory mogą być zastępowane przez motywy)
   enable: Włącz fantazyjny pasek narzędzi
   height: Wysokość
   hide_mode:

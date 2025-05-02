@@ -129,6 +129,8 @@ header:
     shortcuts: Genvägar
     specific_apps: Specifika appar
     virtual_desk: Virtuella stationära datorer
+home:
+  new_resources: Nya resurser
 inherit: Ärva
 inProgress: Pågående...
 insert: Infoga
@@ -146,6 +148,7 @@ quit: Sluta
 remove: Ta bort
 save: Spara
 save_and_restart: Spara och starta om
+see_more: Se mer
 shortcuts:
   enable: Aktivera integrerade genvägar (AHK)
   enable_tooltip: >-
@@ -232,6 +235,10 @@ toolbar:
   delay_to_hide: Dröjsmål att gömma sig
   delay_to_show: Fördröjning att visa
   dock_side: Position
+  dynamic_color: Dynamisk färg
+  dynamic_color_tooltip: >-
+    Aktivera dynamiska bakgrunds- och förgrundsfärger baserat på fokuserat
+    fönster. (Färgerna kan åsidosättas av teman)
   enable: Aktivera snyggt verktygsfält
   height: Höjd
   hide_mode:

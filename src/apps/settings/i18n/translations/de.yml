@@ -131,6 +131,8 @@ header:
     shortcuts: Kurzbefehle
     specific_apps: Spezifische Apps
     virtual_desk: Virtuelle Desktops
+home:
+  new_resources: Neue Ressourcen
 inherit: Erben
 inProgress: In Bearbeitung...
 insert: Einfügen
@@ -148,6 +150,7 @@ quit: Beenden
 remove: Entfernen
 save: Speichern
 save_and_restart: Speichern & neu starten
+see_more: Mehr sehen
 shortcuts:
   enable: Integrierte Kurzbefehle aktivieren (ahk)
   enable_tooltip: >-
@@ -234,6 +237,11 @@ toolbar:
   delay_to_hide: Verzögerung zum Verstecken
   delay_to_show: Verzögerung beim Anzeigen
   dock_side: Position
+  dynamic_color: Dynamische Farbe
+  dynamic_color_tooltip: >-
+    Aktivieren Sie dynamische Hintergrund- und Vordergrundfarben, die auf dem
+    fokussierten Fenster basieren. (Farben können von Themes überschrieben
+    werden)
   enable: Elegante Werkzeugleiste aktivieren
   height: Höhe
   hide_mode:

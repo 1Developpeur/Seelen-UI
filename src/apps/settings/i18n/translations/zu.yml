@@ -131,6 +131,8 @@ header:
     shortcuts: Amashoshothi
     specific_apps: Izinhlelo zokusebenza ezikhethekile
     virtual_desk: Ama-Virtual Desktops
+home:
+  new_resources: Izinsizakusebenza ezintsha
 inherit: Dla ifa
 inProgress: Kuyaqhubeka...
 insert: Faka
@@ -148,6 +150,7 @@ quit: Yeka
 remove: Susa
 save: Hlenga
 save_and_restart: Gcina futhi Qalisa kabusha
+see_more: Buka Okuningi
 shortcuts:
   enable: Nika amandla izinqamuleli ezihlanganisiwe (Ahk)
   enable_tooltip: >-
@@ -234,6 +237,10 @@ toolbar:
   delay_to_hide: Libazise ukucasha
   delay_to_show: Libazisa ukubonisa
   dock_side: Ukuma
+  dynamic_color: Umbala we-Dynamic
+  dynamic_color_tooltip: >-
+    Nika amandla ingemuva elinamandla nemibala engaphambili esekelwe ewindini
+    eligxile. (Imibala ingaba ngaphezulu kwezindikimba)
   enable: Nika amandla amathuluzi e-fancy
   height: Ubude
   hide_mode:

@@ -1,4 +1,5 @@
-import { declareDocumentAsLayeredHitbox, SeelenCommand } from '@seelen-ui/lib';
+import { SeelenCommand } from '@seelen-ui/lib';
+import { declareDocumentAsLayeredHitbox, disableWebviewShortcutsAndContextMenu } from '@shared/setup';
 import { invoke } from '@tauri-apps/api/core';
 import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow';
 import { createRoot } from 'react-dom/client';
@@ -10,7 +11,6 @@ import { loadStore, registerStoreEvents, store } from './modules/shared/store/in
 import { App } from './app';
 
 import { getRootContainer } from '../shared';
-import { wrapConsole } from '../shared/ConsoleWrapper';
 import i18n, { loadTranslations } from './i18n';
 
 import '../shared/styles/colors.css';
@@ -18,19 +18,11 @@ import './styles/variables.css';
 import '../shared/styles/reset.css';
 import './styles/global.css';
 
-wrapConsole();
+disableWebviewShortcutsAndContextMenu();
 await declareDocumentAsLayeredHitbox();
 await loadStore();
 await registerStoreEvents();
 await loadTranslations();
-
-getCurrentWebviewWindow().onDragDropEvent(async (e) => {
-  if (e.payload.type === 'drop') {
-    for (const path of e.payload.paths) {
-      await invoke(SeelenCommand.WegPinItem, { path });
-    }
-  }
-});
 
 const container = getRootContainer();
 createRoot(container).render(
@@ -40,3 +32,11 @@ createRoot(container).render(
     </I18nextProvider>
   </Provider>,
 );
+
+getCurrentWebviewWindow().onDragDropEvent(async (e) => {
+  if (e.payload.type === 'drop') {
+    for (const path of e.payload.paths) {
+      await invoke(SeelenCommand.WegPinItem, { path });
+    }
+  }
+});

@@ -2,14 +2,14 @@ cargo-features = ["profile-rustflags", "codegen-backend"]
 
 [package]
 name = "seelen-ui"
-version = "2.1.9"
+version = "2.3.2"
 description = "Seelen UI Background"
 authors = ["eythaann"]
 license = "Polyform Strict License"
 repository = "https://github.com/eythaann/seelen-ui.git"
 default-run = "seelen-ui"
 edition = "2021"
-rust-version = "1.70"
+rust-version = "1.80"
 build = "scripts/build.rs"
 
 [[bin]]
@@ -46,7 +46,7 @@ tauri = { version = "2.0.0", features = [
 tauri-plugin-fs = "2.0.0"
 tauri-plugin-dialog = "2.0.0"
 tauri-plugin-autostart = "2.0.0"
-tauri-plugin-shell = "2.0.0"
+tauri-plugin-shell = "2.2.1"
 tauri-plugin-process = "2.0.0"
 tauri-plugin-log = "2.0.0"
 tauri-plugin-updater = "2.0.0"
@@ -64,14 +64,14 @@ widestring = "1.0.2"
 itertools = "0.12.1"
 clap = { version = "4.5.4", features = ["derive", "string"] }
 os_info = "3.9.2"
-crossbeam-channel = "0.5.12"
+crossbeam-channel = "0.5.15"
 regex = "1.11.1"
 getset = "0.1.3"
 phf = "0.11.2"
 sysinfo = "0.30.12"
 battery = "0.7.8"
 winvd = { git = "https://github.com/eythaann/virtualdesktopaccessor.git" }
-winreg = "0.52.0"
+winreg = "0.55.0"
 windows-core = "0.59.0" # windows-rs already depends and reexports this, but we need it as a direct dependency (implement macro)
 win-screenshot = "4.0.8"
 base64 = "0.22.1"
@@ -79,12 +79,14 @@ arc-swap = "1.7.1"
 notify-debouncer-full = "0.3.1"
 encoding_rs = "0.8.35"
 evalexpr = "=11.3.0"
-quick-xml = { version = "0.36.2", features = ["serialize", "encoding"] }
+quick-xml = { version = "0.37.2", features = ["serialize", "encoding"] }
 backtrace = "0.3.71"
 owo-colors = "4.1.0"
-rust-i18n = "3.1.2"
+rust-i18n = "3.1.4"
 url = "2.5.4"
 urlencoding = "=2.1.3"
+fern = "0.7.1"
+reqwest = "0.12.15"
 
 [dependencies.seelen-core]
 git = "https://github.com/Seelen-Inc/slu-lib.git" # for release/pre-release/nightly
@@ -169,6 +171,7 @@ features = [
     "Devices_Enumeration",                 # required for bluetooth handling
     "Devices_Radios",                      # required for bluetooth/wifi/mobile etc any radio
     "Devices_WiFi",                        # required for wifi
+    "Devices_Display",                     # required for displays
     "Data_Xml_Dom",                        # required for xml parsing
 ]
 
